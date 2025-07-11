@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { Role } from "@prisma/client";
 
 export async function POST(request: Request) {
     try {
@@ -38,11 +39,12 @@ export async function POST(request: Request) {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
-
-        const updateData: Partial<{ username: string; email: string; role: string; name: string }> = {};
+        const updateData: Partial<{ username: string; email: string; role: Role; name: string }> = {};
         if (username) updateData.username = username;
         if (email) updateData.email = email;
-        if (role) updateData.role = role;
+        //reason to not use `as Role` here is to ensure that the role is a valid Role type
+        if (role) updateData.role = role as Role;
+        if (name) updateData.name = name;
         if (name) updateData.name = name;
 
         if (username && username !== existingUser.username) {
@@ -75,7 +77,7 @@ export async function POST(request: Request) {
 
         const updatedUser = await prisma.user.update({
             where: { username: usernameToUpdate },
-            data: updateData
+            data: { ...updateData }
         });
 
         return new Response(JSON.stringify({

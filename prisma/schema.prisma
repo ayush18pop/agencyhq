@@ -10,18 +10,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Only keep User table - you're using JWT sessions, not database sessions
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   username      String?   @unique
-  password      String // Hashed password
+  password      String
   emailVerified DateTime?
   image         String?
   role          Role      @default(CLIENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  assignedTasks Tasks[] @relation("TaskAssignee") // Tasks assigned TO this user
+  createdTasks  Tasks[] @relation("TaskCreator") // Tasks created BY this user
+}
+
+model Tasks {
+  taskId      String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("pending")
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  assignedTo User   @relation("TaskAssignee", fields: [userId], references: [id])
+  userId     String
+
+  assignedBy   User    @relation("TaskCreator", fields: [assignedById], references: [id])
+  assignedById String
+  Timer        Timer[]
+}
+
+model Timer {
+  id        String    @id @default(cuid())
+  startTime DateTime?
+  endTime   DateTime?
+  duration  Int?
+  taskId    String // Add this field
+  task      Tasks     @relation(fields: [taskId], references: [taskId])
 }
 
 enum Role {

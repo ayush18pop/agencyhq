@@ -86,7 +86,7 @@ export const authOptions: AuthOptions = {
     maxAge: 24 * 60 * 60, // JWT expires every 24 hours
   },
   pages:{
-    signIn: "../../login",
+    signIn: "/login",
   },
   callbacks: {
     async jwt({ token, user }) {

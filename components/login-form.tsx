@@ -34,13 +34,11 @@ export function LoginForm({
       const result = await signIn("credentials", {
         username,
         password,
-        redirect: false,
+        callbackUrl: "/dashboard", 
       })
 
       if (result?.error) {
         setError("Invalid credentials")
-      } else {
-        router.push("/dashboard") // Redirect to dashboard after successful login
       }
     } catch (err) {
       console.error("Login error:", err)

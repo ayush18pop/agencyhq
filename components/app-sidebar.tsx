@@ -15,6 +15,7 @@ import {
   User,
   ChevronsUpDown,
 } from "lucide-react"
+import { signOut } from "next-auth/react"
 
 import {
   Collapsible,
@@ -93,6 +94,10 @@ const data = {
       url: "/projects",
       icon: Frame,
       items: [
+        {
+          title: "All Projects",
+          url: "/projects",
+        },
         {
           title: "Active Projects",
           url: "/projects/active",
@@ -344,9 +349,9 @@ export function AppSidebar({ userRole = 'admin', ...props }: AppSidebarProps) {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem>Account</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

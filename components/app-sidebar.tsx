@@ -16,7 +16,7 @@ import {
   ChevronsUpDown,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
-
+import { useSession } from "next-auth/react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -44,166 +44,169 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// Sample data - you can replace this with role-based data
-const data = {
-  user: {
-    name: "Agency User",
-    email: "user@agency.com",
-    avatar: "/avatars/user.jpg",
-  },
-  teams: [
-    {
-      name: "Agency HQ",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Client Portal",
-      logo: AudioWaveform,
-      plan: "Professional",
-    },
-    {
-      name: "Team Workspace",
-      logo: Command,
-      plan: "Team",
-    },
-  ],
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: SquareTerminal,
-      isActive: true,
-      
-      
-    },
-    {
-      title: "Projects",
-      url: "/projects",
-      icon: Frame,
-      items: [
-        {
-          title: "All Projects",
-          url: "/projects",
-        },
-        {
-          title: "Active Projects",
-          url: "/projects/active",
-        },
-        {
-          title: "Completed",
-          url: "/projects/completed",
-        },
-        {
-          title: "Templates",
-          url: "/projects/templates",
-        },
-      ],
-    },
-    {
-      title: "Clients",
-      url: "/clients",
-      icon: Bot,
-      items: [
-        {
-          title: "All Clients",
-          url: "/clients",
-        },
-        {
-          title: "Active Clients",
-          url: "/clients/active",
-        },
-        {
-          title: "Prospects",
-          url: "/clients/prospects",
-        },
-      ],
-    },
-    {
-      title: "Resources",
-      url: "/resources",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Knowledge Base",
-          url: "/resources/knowledge",
-        },
-        {
-          title: "Templates",
-          url: "/resources/templates",
-        },
-        {
-          title: "Assets",
-          url: "/resources/assets",
-        },
-        {
-          title: "Brand Guidelines",
-          url: "/resources/brand",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/settings/general",
-        },
-        {
-          title: "Team",
-          url: "/settings/team",
-        },
-        {
-          title: "Billing",
-          url: "/settings/billing",
-        },
-        {
-          title: "Integrations",
-          url: "/settings/integrations",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Website Redesign",
-      url: "/projects/website-redesign",
-      icon: Frame,
-    },
-    {
-      name: "Marketing Campaign",
-      url: "/projects/marketing-campaign",
-      icon: PieChart,
-    },
-    {
-      name: "Brand Strategy",
-      url: "/projects/brand-strategy",
-      icon: Map,
-    },
-  ],
-}
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  userRole?: 'admin' | 'manager' | 'employee' | 'client'
+  userRole?: 'SUPER_ADMIN' | 'MANAGER' | 'PROFESSIONAL' | 'CLIENT'
 }
 
-export function AppSidebar({ userRole = 'admin', ...props }: AppSidebarProps) {
+export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
+  const { data: session } = useSession()
+  
+  // Get user role from session if not provided as prop
+  const currentUserRole = userRole || session?.user?.role || 'CLIENT'
+  
+  // Sample data - you can replace this with role-based data
+  const data = {
+    user: {
+      name: session?.user?.name || "User",
+      email: session?.user?.email || "user@agency.com",
+      avatar: session?.user?.image || "/avatars/user.jpg",
+    },
+    teams: [
+      {
+        name: "Agency HQ",
+        logo: GalleryVerticalEnd,
+        plan: "Enterprise",
+      },
+      {
+        name: "Client Portal",
+        logo: AudioWaveform,
+        plan: "Professional",
+      },
+      {
+        name: "Team Workspace",
+        logo: Command,
+        plan: "Team",
+      },
+    ],
+    navMain: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: SquareTerminal,
+        isActive: true,
+      },
+      {
+        title: "Projects",
+        url: "/projects",
+        icon: Frame,
+        items: [
+          {
+            title: "All Projects",
+            url: "/projects",
+          },
+          {
+            title: "Active Projects",
+            url: "/projects/active",
+          },
+          {
+            title: "Completed",
+            url: "/projects/completed",
+          },
+          {
+            title: "Templates",
+            url: "/projects/templates",
+          },
+        ],
+      },
+      {
+        title: "Clients",
+        url: "/clients",
+        icon: Bot,
+        items: [
+          {
+            title: "All Clients",
+            url: "/clients",
+          },
+          {
+            title: "Active Clients",
+            url: "/clients/active",
+          },
+          {
+            title: "Prospects",
+            url: "/clients/prospects",
+          },
+        ],
+      },
+      {
+        title: "Resources",
+        url: "/resources",
+        icon: BookOpen,
+        items: [
+          {
+            title: "Knowledge Base",
+            url: "/resources/knowledge",
+          },
+          {
+            title: "Templates",
+            url: "/resources/templates",
+          },
+          {
+            title: "Assets",
+            url: "/resources/assets",
+          },
+          {
+            title: "Brand Guidelines",
+            url: "/resources/brand",
+          },
+        ],
+      },
+      {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings2,
+        items: [
+          {
+            title: "General",
+            url: "/settings/general",
+          },
+          {
+            title: "Team",
+            url: "/settings/team",
+          },
+          {
+            title: "Billing",
+            url: "/settings/billing",
+          },
+          {
+            title: "Integrations",
+            url: "/settings/integrations",
+          },
+        ],
+      },
+    ],
+    projects: [
+      {
+        name: "Website Redesign",
+        url: "/projects/website-redesign",
+        icon: Frame,
+      },
+      {
+        name: "Marketing Campaign",
+        url: "/projects/marketing-campaign",
+        icon: PieChart,
+      },
+      {
+        name: "Brand Strategy",
+        url: "/projects/brand-strategy",
+        icon: Map,
+      },
+    ],
+  }
+
   // Filter navigation based on user role
   const getFilteredNavigation = () => {
-    switch (userRole) {
-      case 'admin':
+    switch (currentUserRole) {
+      case 'SUPER_ADMIN':
         return data.navMain // Admin sees everything
-      case 'manager':
+      case 'MANAGER':
         return data.navMain.filter(item => 
           ['Dashboard', 'Projects', 'Clients', 'Resources'].includes(item.title)
         )
-      case 'employee':
+      case 'PROFESSIONAL':
         return data.navMain.filter(item => 
           ['Dashboard', 'Projects', 'Resources'].includes(item.title)
         )
-      case 'client':
+      case 'CLIENT':
         return data.navMain.filter(item => 
           ['Dashboard', 'Projects'].includes(item.title)
         )
@@ -295,7 +298,7 @@ export function AppSidebar({ userRole = 'admin', ...props }: AppSidebarProps) {
           </SidebarMenu>
         </SidebarGroup>
         
-        {userRole === 'admin' || userRole === 'manager' ? (
+        {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'MANAGER') ? (
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupLabel>Projects</SidebarGroupLabel>
             <SidebarMenu>
@@ -338,7 +341,6 @@ export function AppSidebar({ userRole = 'admin', ...props }: AppSidebarProps) {
                 sideOffset={4}
               >
                 <DropdownMenuItem>Profile</DropdownMenuItem>
-                
                 <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

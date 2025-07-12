@@ -4,6 +4,7 @@ import "./globals.css";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import { SidebarLayout } from "@/components/sidebar-layout";
+import { SessionWrapper } from "@/components/session-wrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,11 +33,13 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {session ? (
-          <SidebarLayout>{children}</SidebarLayout>
-        ) : (
-          children
-        )}
+        <SessionWrapper session={session}>
+          {session ? (
+            <SidebarLayout>{children}</SidebarLayout>
+          ) : (
+            children
+          )}
+        </SessionWrapper>
       </body>
     </html>
   );

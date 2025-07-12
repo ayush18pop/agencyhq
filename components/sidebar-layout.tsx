@@ -7,15 +7,18 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useSession } from "next-auth/react"
 
 interface SidebarLayoutProps {
   children: React.ReactNode
 }
 
 export function SidebarLayout({ children }: SidebarLayoutProps) {
+  const { data: session } = useSession()
+  
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar userRole={session?.user?.role as 'SUPER_ADMIN' | 'MANAGER' | 'PROFESSIONAL' | 'CLIENT'} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

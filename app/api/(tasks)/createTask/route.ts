@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         return new Response("Insufficient permissions to create tasks", { status: 403 });
     }
 
-    const { title, description, dueDate, assignedTo, projectId } = body;
+    const { title, description, dueDate, assignedTo, projectId, priority } = body;
 
     if (!title || !description || !dueDate || !assignedTo) {
         return new Response("Missing required fields: title, description, dueDate, assignedTo", { status: 400 });
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
             dueDate: parsedDueDate,
             userId: assignedTo,
             assignedById: session.user.id,
+            priority: priority || 'MEDIUM',
             ...(projectId && {
                 projectId: projectId
             })
@@ -96,7 +97,12 @@ export async function POST(request: Request) {
                 project: {
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        client: {
+                            select: {
+                                name: true
+                            }
+                        }
                     }
                 }
             }

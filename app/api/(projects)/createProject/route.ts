@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         return new Response("Insufficient permissions to create projects", { status: 403 });
     }
 
-    const { name, description } = body;
+    const { name, description, clientId, teamId, startDate, endDate, budget } = body;
 
     if (!name || !description) {
         return new Response("Missing required fields: name and description", { status: 400 });
@@ -49,14 +49,36 @@ export async function POST(request: Request) {
         const projectData = {
             name: name.trim(),
             description: description.trim(),
+            clientId: clientId || null,
+            teamId: teamId || null,
+            startDate: startDate ? new Date(startDate) : null,
+            endDate: endDate ? new Date(endDate) : null,
+            budget: budget ? parseFloat(budget) : null,
         };
 
         const project = await prisma.project.create({
             data: projectData,
             include: {
-                tasks: true, // Include tasks count in response
+                tasks: true,
+                team: {
+                    select: {
+                        name: true,
+                        color: true,
+                        icon: true
+                    }
+                },
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                },
                 _count: {
-                    select: { tasks: true }
+                    select: { 
+                        tasks: true,
+                        comments: true
+                    }
                 }
             }
         });

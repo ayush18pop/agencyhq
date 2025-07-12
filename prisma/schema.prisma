@@ -22,8 +22,42 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  assignedTasks Tasks[] @relation("TaskAssignee") // Tasks assigned TO this user
-  createdTasks  Tasks[] @relation("TaskCreator") // Tasks created BY this user
+  assignedTasks Tasks[] @relation("TaskAssignee")
+  createdTasks  Tasks[] @relation("TaskCreator")
+
+  userTeams UserTeam[]
+
+  clientProjects Project[] @relation("ClientProjects")
+
+  taskComments       TaskComment[]       @relation("TaskComments")
+  projectComments    ProjectComment[]    @relation("ProjectComments")
+  taskAttachments    TaskAttachment[]    @relation("TaskAttachments")
+  projectAttachments ProjectAttachment[] @relation("ProjectAttachments")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String? // For UI theming
+  icon        String? // Icon identifier
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userTeams UserTeam[]
+  projects  Project[]
+}
+
+model UserTeam {
+  userId   String
+  teamId   String
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
 }
 
 model Tasks {
@@ -31,6 +65,7 @@ model Tasks {
   title       String
   description String?
   status      Status    @default(PENDING)
+  priority    Priority  @default(MEDIUM)
   dueDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -38,9 +73,12 @@ model Tasks {
   assignedTo User   @relation("TaskAssignee", fields: [userId], references: [id])
   userId     String
 
-  assignedBy   User    @relation("TaskCreator", fields: [assignedById], references: [id])
+  assignedBy   User   @relation("TaskCreator", fields: [assignedById], references: [id])
   assignedById String
-  Timer        Timer[]
+
+  Timer       Timer[]
+  comments    TaskComment[]
+  attachments TaskAttachment[]
 
   project   Project? @relation(fields: [projectId], references: [id])
   projectId String?
@@ -51,17 +89,83 @@ model Timer {
   startTime DateTime?
   endTime   DateTime?
   duration  Int?
-  taskId    String // Add this field
+  taskId    String
   task      Tasks     @relation(fields: [taskId], references: [taskId])
 }
 
 model Project {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  clientId    String? // Link to client user
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   tasks       Tasks[]
+  team        Team?               @relation(fields: [teamId], references: [id])
+  teamId      String?
+  client      User?               @relation("ClientProjects", fields: [clientId], references: [id])
+  comments    ProjectComment[]
+  attachments ProjectAttachment[]
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taskId String
+  task   Tasks  @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("TaskComments", fields: [authorId], references: [id])
+}
+
+model ProjectComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("ProjectComments", fields: [authorId], references: [id])
+}
+
+model TaskAttachment {
+  id        String   @id @default(cuid())
+  filename  String
+  fileUrl   String
+  fileSize  Int?
+  mimeType  String?
+  createdAt DateTime @default(now())
+
+  taskId String
+  task   Tasks  @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   User   @relation("TaskAttachments", fields: [uploadedById], references: [id])
+}
+
+model ProjectAttachment {
+  id        String   @id @default(cuid())
+  filename  String
+  fileUrl   String
+  fileSize  Int?
+  mimeType  String?
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   User   @relation("ProjectAttachments", fields: [uploadedById], references: [id])
 }
 
 enum Role {
@@ -77,4 +181,11 @@ enum Status {
   COMPLETED
   ON_HOLD
   CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

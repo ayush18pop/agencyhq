@@ -74,20 +74,8 @@ const data = {
       url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
-      items: [
-        {
-          title: "Overview",
-          url: "/dashboard",
-        },
-        {
-          title: "Analytics",
-          url: "/dashboard/analytics",
-        },
-        {
-          title: "Reports",
-          url: "/dashboard/reports",
-        },
-      ],
+      
+      
     },
     {
       title: "Projects",

@@ -30,7 +30,7 @@ model Tasks {
   taskId      String    @id @default(cuid())
   title       String
   description String?
-  status      String    @default("pending")
+  status      Status    @default(PENDING)
   dueDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -41,6 +41,9 @@ model Tasks {
   assignedBy   User    @relation("TaskCreator", fields: [assignedById], references: [id])
   assignedById String
   Timer        Timer[]
+
+  project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
 }
 
 model Timer {
@@ -52,9 +55,26 @@ model Timer {
   task      Tasks     @relation(fields: [taskId], references: [taskId])
 }
 
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       Tasks[]
+}
+
 enum Role {
   SUPER_ADMIN
   MANAGER
   PROFESSIONAL
   CLIENT
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
 }

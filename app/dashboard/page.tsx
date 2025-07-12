@@ -1,26 +1,12 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-  
-  // Protect the route
-  if (!session) {
-    redirect("/login");
-  }
-
+export default function DashboardPage() {
   return (
     <>
-      <div className="flex min-h-screen">
-        <div className="w-64 bg-sidebar p-6">
-          <Button/>
-        </div>
-        <div className="flex-1 bg-background p-6">
-
-        </div>
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+        <div className="bg-muted/50 aspect-video rounded-xl" />
+        <div className="bg-muted/50 aspect-video rounded-xl" />
+        <div className="bg-muted/50 aspect-video rounded-xl" />
       </div>
+      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
     </>
   );
 }

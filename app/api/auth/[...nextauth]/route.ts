@@ -27,7 +27,7 @@ declare module "@auth/core/adapters" {
 
 export const authOptions: AuthOptions = {
 
-  providers: [
+  providers: [  
     CredentialsProvider({
       name: "Credentials",
       credentials: {

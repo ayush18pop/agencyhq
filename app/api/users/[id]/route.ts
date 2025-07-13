@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -13,13 +14,13 @@ export async function GET(
     }
 
     // Users can view their own profile, managers/admins can view any
-    if (session.user.id !== params.id && !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '')) {
+    if (session.user.id !== id && !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '')) {
         return new Response("Unauthorized", { status: 401 });
     }
 
     try {
         const user = await prisma.user.findUnique({
-            where: { id: params.id },
+            where: { id },
             select: {
                 id: true,
                 name: true,
@@ -77,8 +78,9 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -86,7 +88,7 @@ export async function PUT(
     }
 
     // Users can edit their own profile, admins can edit any
-    if (session.user.id !== params.id && session.user.role !== 'SUPER_ADMIN') {
+    if (session.user.id !== id && session.user.role !== 'SUPER_ADMIN') {
         return new Response("Unauthorized", { status: 401 });
     }
 
@@ -113,7 +115,7 @@ export async function PUT(
         }
 
         const user = await prisma.user.update({
-            where: { id: params.id },
+            where: { id },
             data: updateData,
             select: {
                 id: true,
@@ -136,8 +138,9 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.role || session.user.role !== 'SUPER_ADMIN') {
@@ -145,13 +148,13 @@ export async function DELETE(
     }
 
     // Prevent deleting yourself
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
         return new Response("Cannot delete your own account", { status: 400 });
     }
 
     try {
         await prisma.user.delete({
-            where: { id: params.id }
+            where: { id }
         });
 
         return new Response(JSON.stringify({

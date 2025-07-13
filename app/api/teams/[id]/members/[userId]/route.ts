@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string; userId: string } }
+    context: { params: Promise<{ id: string; userId: string }> }
 ) {
+    const { id, userId } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.role || !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role)) {
@@ -17,8 +18,8 @@ export async function DELETE(
         const userTeam = await prisma.userTeam.findUnique({
             where: {
                 userId_teamId: {
-                    userId: params.userId,
-                    teamId: params.id
+                    userId: userId,
+                    teamId: id
                 }
             }
         });
@@ -31,8 +32,8 @@ export async function DELETE(
         await prisma.userTeam.delete({
             where: {
                 userId_teamId: {
-                    userId: params.userId,
-                    teamId: params.id
+                    userId: userId,
+                    teamId: id
                 }
             }
         });

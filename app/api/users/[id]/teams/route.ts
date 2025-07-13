@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -13,14 +14,14 @@ export async function GET(
     }
 
     // Users can view their own teams, managers/admins can view any user's teams
-    if (session.user.id !== params.id && !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '')) {
+    if (session.user.id !== id && !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '')) {
         return new Response("Unauthorized", { status: 401 });
     }
 
     try {
         const userTeams = await prisma.userTeam.findMany({
             where: {
-                userId: params.id
+                userId: id
             },
             include: {
                 team: {

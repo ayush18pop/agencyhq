@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -15,7 +16,7 @@ export async function PUT(
     try {
         // Get the timer
         const timer = await prisma.timer.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 task: {
                     select: {
@@ -42,7 +43,7 @@ export async function PUT(
 
         // Stop the timer
         const updatedTimer = await prisma.timer.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 endTime: new Date()
             },
@@ -75,8 +76,9 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -86,7 +88,7 @@ export async function DELETE(
     try {
         // Get the timer
         const timer = await prisma.timer.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 task: {
                     select: {
@@ -107,7 +109,7 @@ export async function DELETE(
 
         // Delete the timer
         await prisma.timer.delete({
-            where: { id: params.id }
+            where: { id }
         });
 
         return new Response(JSON.stringify({

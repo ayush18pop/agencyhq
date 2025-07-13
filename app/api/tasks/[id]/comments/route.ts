@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -15,7 +16,7 @@ export async function GET(
     try {
         // Check if user has access to this task
         const task = await prisma.tasks.findUnique({
-            where: { taskId: params.id },
+            where: { taskId: id },
             include: {
                 project: {
                     select: {
@@ -40,7 +41,7 @@ export async function GET(
         }
 
         const comments = await prisma.taskComment.findMany({
-            where: { taskId: params.id },
+            where: { taskId: id },
             include: {
                 author: {
                     select: {
@@ -67,8 +68,9 @@ export async function GET(
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -85,7 +87,7 @@ export async function POST(
     try {
         // Check if user has access to this task
         const task = await prisma.tasks.findUnique({
-            where: { taskId: params.id },
+            where: { taskId: id },
             include: {
                 project: {
                     select: {
@@ -112,7 +114,7 @@ export async function POST(
         const comment = await prisma.taskComment.create({
             data: {
                 content: content.trim(),
-                taskId: params.id,
+                taskId: id,
                 authorId: session.user.id
             },
             include: {

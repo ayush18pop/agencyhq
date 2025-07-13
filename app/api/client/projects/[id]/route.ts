@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -20,7 +21,7 @@ export async function GET(
     try {
         const project = await prisma.project.findUnique({
             where: {
-                id: params.id,
+                id,
                 clientId: session.user.id // Ensure client can only see their own projects
             },
             include: {
@@ -127,9 +128,9 @@ export async function GET(
 
         // Calculate progress
         const totalTasks = project.tasks.length;
-        const completedTasks = project.tasks.filter(task => task.status === 'COMPLETED').length;
-        const inProgressTasks = project.tasks.filter(task => task.status === 'IN_PROGRESS').length;
-        const pendingTasks = project.tasks.filter(task => task.status === 'PENDING').length;
+        const completedTasks = project.tasks.filter((task: typeof project.tasks[0]) => task.status === 'COMPLETED').length;
+        const inProgressTasks = project.tasks.filter((task: typeof project.tasks[0]) => task.status === 'IN_PROGRESS').length;
+        const pendingTasks = project.tasks.filter((task: typeof project.tasks[0]) => task.status === 'PENDING').length;
         const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
         // Check if project is overdue

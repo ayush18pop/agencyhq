@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function PUT(request: Request) {
     const body = await request.json();

@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.role || !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role)) {
@@ -31,7 +32,7 @@ export async function POST(
 
         // Check if team exists
         const team = await prisma.team.findUnique({
-            where: { id: params.id }
+            where: { id }
         });
 
         if (!team) {
@@ -43,7 +44,7 @@ export async function POST(
             where: {
                 userId_teamId: {
                     userId,
-                    teamId: params.id
+                    teamId: id
                 }
             }
         });
@@ -56,7 +57,7 @@ export async function POST(
         const userTeam = await prisma.userTeam.create({
             data: {
                 userId,
-                teamId: params.id
+                teamId: id
             },
             include: {
                 user: {

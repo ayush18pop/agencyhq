@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -14,7 +15,7 @@ export async function GET(
 
     try {
         const team = await prisma.team.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 userTeams: {
                     include: {
@@ -59,8 +60,9 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.role || !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role)) {
@@ -76,7 +78,7 @@ export async function PUT(
 
     try {
         const team = await prisma.team.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 name: name.trim(),
                 description: description?.trim(),
@@ -96,8 +98,9 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.role || session.user.role !== 'SUPER_ADMIN') {
@@ -106,7 +109,7 @@ export async function DELETE(
 
     try {
         await prisma.team.delete({
-            where: { id: params.id }
+            where: { id }
         });
 
         return new Response(JSON.stringify({

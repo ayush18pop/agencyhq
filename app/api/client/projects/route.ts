@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
@@ -75,9 +75,9 @@ export async function GET() {
         });
 
         // Calculate progress for each project
-        const projectsWithProgress = projects.map(project => {
+        const projectsWithProgress = projects.map((project: typeof projects[0]) => {
             const totalTasks = project.tasks.length;
-            const completedTasks = project.tasks.filter(task => task.status === 'COMPLETED').length;
+            const completedTasks = project.tasks.filter((task: typeof project.tasks[0]) => task.status === 'COMPLETED').length;
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
             return {

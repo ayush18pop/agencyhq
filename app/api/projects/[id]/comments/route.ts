@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -14,7 +15,7 @@ export async function GET(
 
     try {
         const project = await prisma.project.findUnique({
-            where: { id: params.id },
+            where: { id },
             select: {
                 clientId: true,
                 teamId: true,
@@ -44,7 +45,7 @@ export async function GET(
         }
 
         const comments = await prisma.projectComment.findMany({
-            where: { projectId: params.id },
+            where: { projectId: id },
             include: {
                 author: {
                     select: {
@@ -71,8 +72,9 @@ export async function GET(
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -88,7 +90,7 @@ export async function POST(
 
     try {
         const project = await prisma.project.findUnique({
-            where: { id: params.id },
+            where: { id },
             select: {
                 clientId: true,
                 teamId: true,
@@ -120,7 +122,7 @@ export async function POST(
         const comment = await prisma.projectComment.create({
             data: {
                 content: content.trim(),
-                projectId: params.id,
+                projectId: id,
                 authorId: session.user.id
             },
             include: {

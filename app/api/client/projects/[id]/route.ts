@@ -13,7 +13,6 @@ export async function GET(
         return new Response("Unauthorized", { status: 401 });
     }
 
-    // Only clients can access this endpoint
     if (session.user.role !== 'CLIENT') {
         return new Response("This endpoint is for clients only", { status: 403 });
     }

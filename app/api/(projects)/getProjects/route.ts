@@ -48,8 +48,25 @@ export async function GET() {
                     }
                 }
             }) as ProjectWithTasks[];
+        } else if (role === 'CLIENT') {
+            // Clients see only their own projects
+            projects = await prisma.project.findMany({
+                where: {
+                    clientId: userId
+                },
+                include: {
+                    tasks: {
+                        select: {
+                            taskId: true,
+                            title: true,
+                            status: true,
+                            dueDate: true
+                        }
+                    }
+                }
+            }) as ProjectWithTasks[];
         } else {
-            // Professionals and clients only see projects they're assigned to
+            // Professionals see projects where they're assigned to tasks
             projects = await prisma.project.findMany({
                 where: {
                     tasks: {

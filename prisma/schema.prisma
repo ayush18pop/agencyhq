@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,77 +8,67 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  username      String?   @unique
-  password      String
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(CLIENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  assignedTasks Tasks[] @relation("TaskAssignee")
-  createdTasks  Tasks[] @relation("TaskCreator")
-
-  userTeams UserTeam[]
-
-  clientProjects Project[] @relation("ClientProjects")
-
-  taskComments       TaskComment[]       @relation("TaskComments")
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String?             @unique
+  username           String?             @unique
+  password           String
+  emailVerified      DateTime?
+  image              String?
+  role               Role                @default(CLIENT)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  clientProjects     Project[]           @relation("ClientProjects")
+  projectAttachments ProjectAttachment[] @relation("ProjectAttachments")
   projectComments    ProjectComment[]    @relation("ProjectComments")
   taskAttachments    TaskAttachment[]    @relation("TaskAttachments")
-  projectAttachments ProjectAttachment[] @relation("ProjectAttachments")
+  taskComments       TaskComment[]       @relation("TaskComments")
+  createdTasks       Tasks[]             @relation("TaskCreator")
+  assignedTasks      Tasks[]             @relation("TaskAssignee")
+  userTeams          UserTeam[]
 }
 
 model Team {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String     @id @default(cuid())
+  name        String     @unique
   description String?
-  color       String? // For UI theming
-  icon        String? // Icon identifier
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  userTeams UserTeam[]
-  projects  Project[]
+  color       String?
+  icon        String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  projects    Project[]
+  userTeams   UserTeam[]
 }
 
 model UserTeam {
   userId   String
   teamId   String
   joinedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, teamId])
 }
 
 model Tasks {
-  taskId      String    @id @default(cuid())
-  title       String
-  description String?
-  status      Status    @default(PENDING)
-  priority    Priority  @default(MEDIUM)
-  dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  assignedTo User   @relation("TaskAssignee", fields: [userId], references: [id])
-  userId     String
-
-  assignedBy   User   @relation("TaskCreator", fields: [assignedById], references: [id])
+  taskId       String           @id @default(cuid())
+  title        String
+  description  String?
+  status       Status           @default(PENDING)
+  priority     Priority         @default(MEDIUM)
+  dueDate      DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  userId       String
   assignedById String
-
-  Timer       Timer[]
-  comments    TaskComment[]
-  attachments TaskAttachment[]
-
-  project   Project? @relation(fields: [projectId], references: [id])
-  projectId String?
+  projectId    String?
+  attachments  TaskAttachment[]
+  comments     TaskComment[]
+  assignedBy   User             @relation("TaskCreator", fields: [assignedById], references: [id])
+  project      Project?         @relation(fields: [projectId], references: [id])
+  assignedTo   User             @relation("TaskAssignee", fields: [userId], references: [id])
+  Timer        Timer[]
 }
 
 model Timer {
@@ -94,22 +81,21 @@ model Timer {
 }
 
 model Project {
-  id          String    @id @default(cuid())
+  id          String              @id @default(cuid())
   name        String
   description String?
   startDate   DateTime?
   endDate     DateTime?
   budget      Float?
-  clientId    String? // Link to client user
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  tasks       Tasks[]
-  team        Team?               @relation(fields: [teamId], references: [id])
+  clientId    String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   teamId      String?
   client      User?               @relation("ClientProjects", fields: [clientId], references: [id])
-  comments    ProjectComment[]
+  team        Team?               @relation(fields: [teamId], references: [id])
   attachments ProjectAttachment[]
+  comments    ProjectComment[]
+  tasks       Tasks[]
 }
 
 model TaskComment {
@@ -117,12 +103,10 @@ model TaskComment {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  taskId String
-  task   Tasks  @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
-
-  authorId String
-  author   User   @relation("TaskComments", fields: [authorId], references: [id])
+  taskId    String
+  authorId  String
+  author    User     @relation("TaskComments", fields: [authorId], references: [id])
+  task      Tasks    @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
 }
 
 model ProjectComment {
@@ -130,42 +114,36 @@ model ProjectComment {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  authorId String
-  author   User   @relation("ProjectComments", fields: [authorId], references: [id])
+  authorId  String
+  author    User     @relation("ProjectComments", fields: [authorId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model TaskAttachment {
-  id        String   @id @default(cuid())
-  filename  String
-  fileUrl   String
-  fileSize  Int?
-  mimeType  String?
-  createdAt DateTime @default(now())
-
-  taskId String
-  task   Tasks  @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
-
+  id           String   @id @default(cuid())
+  filename     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  createdAt    DateTime @default(now())
+  taskId       String
   uploadedById String
-  uploadedBy   User   @relation("TaskAttachments", fields: [uploadedById], references: [id])
+  task         Tasks    @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+  uploadedBy   User     @relation("TaskAttachments", fields: [uploadedById], references: [id])
 }
 
 model ProjectAttachment {
-  id        String   @id @default(cuid())
-  filename  String
-  fileUrl   String
-  fileSize  Int?
-  mimeType  String?
-  createdAt DateTime @default(now())
-
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
+  id           String   @id @default(cuid())
+  filename     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  createdAt    DateTime @default(now())
+  projectId    String
   uploadedById String
-  uploadedBy   User   @relation("ProjectAttachments", fields: [uploadedById], references: [id])
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation("ProjectAttachments", fields: [uploadedById], references: [id])
 }
 
 enum Role {

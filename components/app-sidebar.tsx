@@ -1,16 +1,12 @@
 "use client"
 
 import {
-  AudioWaveform,
+  // Import only icons that are actually used
+  SquareTerminal,
+  Frame,
   BookOpen,
   Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
   Settings2,
-  SquareTerminal,
   ChevronRight,
   User,
   ChevronsUpDown,
@@ -44,46 +40,68 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
+/**
+ * Navigation Item Interface
+ */
+interface NavItem {
+  title: string;
+  url: string;
+  icon?: React.ComponentType;
+  isActive?: boolean;
+  items?: NavSubItem[];
+}
+
+/**
+ * Navigation Sub-Item Interface
+ */
+interface NavSubItem {
+  title: string;
+  url: string;
+}
+
+/**
+ * App Sidebar Props Interface
+ * 
+ * @property {string} userRole - User role determines which navigation items are visible
+ */
+
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   userRole?: 'SUPER_ADMIN' | 'MANAGER' | 'PROFESSIONAL' | 'CLIENT'
 }
 
+/**
+ * App Sidebar Component Template
+ * 
+ * This component serves as a template for creating a sidebar with role-based navigation.
+ * Developers should customize the navigation items according to their application needs.
+ */
 export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
   
   // Get user role from session if not provided as prop
-  const currentUserRole = userRole || session?.user?.role || 'CLIENT'
-  
-  // Sample data - you can replace this with role-based data
+  const currentUserRole = userRole || session?.user?.role || 'CLIENT';
+
+  /**
+   * Application Data Template
+   * 
+   * DEVELOPER NOTE:
+   * Replace this data with your application's actual navigation structure.
+   * Each main navigation item can have sub-items defined in the 'items' array.
+   */
   const data = {
     user: {
       name: session?.user?.name || "User",
-      email: session?.user?.email || "user@agency.com",
+      email: session?.user?.email || "user@example.com",
       avatar: session?.user?.image || "/avatars/user.jpg",
     },
-    teams: [
-      {
-        name: "Agency HQ",
-        logo: GalleryVerticalEnd,
-        plan: "Enterprise",
-      },
-      {
-        name: "Client Portal",
-        logo: AudioWaveform,
-        plan: "Professional",
-      },
-      {
-        name: "Team Workspace",
-        logo: Command,
-        plan: "Team",
-      },
-    ],
-    navMain: [
+    // DEVELOPER NOTE: Define your application sections/pages here
+    navMain: [ // Array of NavItem objects
       {
         title: "Dashboard",
         url: "/dashboard",
-        icon: SquareTerminal,
-        isActive: true,
+        icon: SquareTerminal, // Use appropriate icon from lucide-react
+        isActive: true, // Set to true for the default active section
       },
       {
         title: "Projects",
@@ -98,14 +116,7 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
             title: "Active Projects",
             url: "/projects/active",
           },
-          {
-            title: "Completed",
-            url: "/projects/completed",
-          },
-          {
-            title: "Templates",
-            url: "/projects/templates",
-          },
+          // Add more sub-items as needed
         ],
       },
       {
@@ -117,14 +128,7 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
             title: "All Clients",
             url: "/clients",
           },
-          {
-            title: "Active Clients",
-            url: "/clients/active",
-          },
-          {
-            title: "Prospects",
-            url: "/clients/prospects",
-          },
+          // Add more sub-items as needed
         ],
       },
       {
@@ -136,18 +140,7 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
             title: "Knowledge Base",
             url: "/resources/knowledge",
           },
-          {
-            title: "Templates",
-            url: "/resources/templates",
-          },
-          {
-            title: "Assets",
-            url: "/resources/assets",
-          },
-          {
-            title: "Brand Guidelines",
-            url: "/resources/brand",
-          },
+          // Add more sub-items as needed
         ],
       },
       {
@@ -159,41 +152,19 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
             title: "General",
             url: "/settings/general",
           },
-          {
-            title: "Team",
-            url: "/settings/team",
-          },
-          {
-            title: "Billing",
-            url: "/settings/billing",
-          },
-          {
-            title: "Integrations",
-            url: "/settings/integrations",
-          },
+          // Add more sub-items as needed
         ],
       },
     ],
-    projects: [
-      {
-        name: "Website Redesign",
-        url: "/projects/website-redesign",
-        icon: Frame,
-      },
-      {
-        name: "Marketing Campaign",
-        url: "/projects/marketing-campaign",
-        icon: PieChart,
-      },
-      {
-        name: "Brand Strategy",
-        url: "/projects/brand-strategy",
-        icon: Map,
-      },
-    ],
-  }
+  };
 
-  // Filter navigation based on user role
+  /**
+   * Role-Based Navigation Filter
+   * 
+   * DEVELOPER NOTE:
+   * Customize this function to determine which navigation items are available
+   * for each user role in your application.
+   */
   const getFilteredNavigation = () => {
     switch (currentUserRole) {
       case 'SUPER_ADMIN':
@@ -215,12 +186,23 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
     }
   }
 
-  const filteredNav = getFilteredNavigation()
-  const activeTeam = data.teams[0]
-  const ActiveTeamLogo = activeTeam.logo
+  const filteredNav = getFilteredNavigation();
+  
+  // DEVELOPER NOTE: Define your app/company branding and logo here
+  const appInfo = {
+    name: "Agency HQ",
+    logo: SquareTerminal // Use appropriate icon from lucide-react
+  };
+
 
   return (
     <Sidebar collapsible="icon" {...props}>
+      {/* 
+      ===================================================
+      HEADER SECTION
+      ===================================================
+      DEVELOPER NOTE: This section contains the app/company branding
+      */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -231,35 +213,45 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                    <ActiveTeamLogo className="size-4" />
+                    <appInfo.logo className="size-4" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{activeTeam.name}</span>
-                    <span className="truncate text-xs">{activeTeam.plan}</span>
+                    <span className="truncate font-semibold">{appInfo.name}</span>
+                    <span className="truncate text-xs">Your platform</span>
                   </div>
                   <ChevronsUpDown className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+              {/* 
+              DEVELOPER NOTE: This dropdown menu can be used for workspace selection
+              or other app-level navigation. Remove if not needed.
+              */}
               <DropdownMenuContent
                 className="w-[--radix-popper-anchor-width] min-w-56 rounded-lg"
                 align="start"
                 side="bottom"
                 sideOffset={4}
               >
-                {data.teams.map((team) => (
-                  <DropdownMenuItem key={team.name} className="gap-2 p-2">
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
-                      <team.logo className="size-4 shrink-0" />
-                    </div>
-                    {team.name}
-                  </DropdownMenuItem>
-                ))}
+                {/* Add your workspace options here if needed */}
+                <DropdownMenuItem className="gap-2 p-2">
+                  <div className="flex size-6 items-center justify-center rounded-sm border">
+                    <SquareTerminal className="size-4 shrink-0" />
+                  </div>
+                  {appInfo.name}
+                </DropdownMenuItem>
+                {/* Add additional workspaces here if needed */}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      
+
+      {/* 
+      ===================================================
+      MAIN NAVIGATION
+      ===================================================
+      DEVELOPER NOTE: This section contains the main navigation items
+      */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -276,47 +268,62 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
                     <SidebarMenuButton tooltip={item.title}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      {item.items && (
+                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      )}
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+                  {item.items && (
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items?.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton asChild>
+                              <a href={subItem.url}>
+                                <span>{subItem.title}</span>
+                              </a>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  )}
                 </SidebarMenuItem>
               </Collapsible>
             ))}
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* 
+        ===================================================
+        OPTIONAL SECTION - DEVELOPER CUSTOMIZATION
+        ===================================================
+        DEVELOPER NOTE: Add additional sidebar groups/sections here if needed
+        Examples: Recent Items, Favorites, Pinned Items, etc.
         
-        {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'MANAGER') ? (
-          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Projects</SidebarGroupLabel>
-            <SidebarMenu>
-              {data.projects.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.name}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-        ) : null}
+        <SidebarGroup>
+          <SidebarGroupLabel>Recent Items</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href="#" className="flex flex-col items-start w-full">
+                  <span className="truncate font-medium text-sm">Item Name</span>
+                  <span className="text-xs text-muted-foreground">Additional info</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        */}
+        
       </SidebarContent>
-      
+
+      {/* 
+      ===================================================
+      FOOTER SECTION - USER PROFILE
+      ===================================================
+      DEVELOPER NOTE: This section contains the user profile and sign out option
+      */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -340,6 +347,10 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
                 align="end"
                 sideOffset={4}
               >
+                {/* 
+                DEVELOPER NOTE: Add user-related menu items here
+                Examples: Profile, Settings, Help, etc.
+                */}
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
@@ -347,8 +358,8 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      
+
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

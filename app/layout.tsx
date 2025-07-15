@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agency OS",
+  title: "agencyHQ",
   description: "Complete agency management system",
 };
 

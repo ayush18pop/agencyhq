@@ -1,5 +1,3 @@
-
-
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -7,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { PieChart, Users, Folder, DollarSign, CheckCircle, Clock } from "lucide-react";
+import Link from "next/link";
 
 
 export default async function DashboardPage() {
@@ -83,7 +82,7 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold">Recent Projects</h2>
           <Button variant="outline" asChild>
-            <a href="/projects">View All</a>
+            <Link href="/projects">View All</Link>
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -123,7 +122,7 @@ export default async function DashboardPage() {
                   </CardContent>
                   <CardFooter>
                     <Button variant="outline" asChild>
-                      <a href={`/projects/${project.id}`}>Open Project</a>
+                      <Link href={`/projects/${project.id}`}>Open Project</Link>
                     </Button>
                   </CardFooter>
                 </Card>

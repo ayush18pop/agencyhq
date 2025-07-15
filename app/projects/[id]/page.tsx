@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 
 export interface ProjectWithStats {
@@ -15,7 +15,7 @@ export interface ProjectWithStats {
   createdAt: string;
   updatedAt: string;
   teamId?: string | null;
-  tasks: any[];
+  tasks: { status: string }[];
   totalTasks: number;
   completedTasks: number;
   pendingTasks: number;
@@ -23,7 +23,6 @@ export interface ProjectWithStats {
 }
 
 export default function ProjectsPage() {
-  const router = useRouter();
   const params = useParams();
   const projectId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
 
@@ -51,7 +50,7 @@ export default function ProjectsPage() {
         }
         const { project } = await res.json();
         setProject(project);
-      } catch (err) {
+      } catch {
         setError("Failed to fetch project details");
       } finally {
         setLoading(false);

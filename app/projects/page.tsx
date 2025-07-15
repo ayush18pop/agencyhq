@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/Card";
+import axios from "axios";
+import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
 import Link from "next/link";
 
 interface ProjectStats {
@@ -41,12 +42,10 @@ export default function ProjectsPage() {
         const statsJson = await statsRes.json();
         setStatsData(statsJson.stats || {});
 
-        const recentProjectsRes = await fetch("/api/dashboard/recent-projects", { credentials: "include" });
-        if (!recentProjectsRes.ok) {
-          throw new Error("Failed to fetch recent projects");
-        }
-        const recentProjects: RecentProject[] = await recentProjectsRes.json();
-        setRecentProjects(recentProjects);
+        // Fetch projects using axios
+        const projectsRes = await axios.get("/api/getProjects", { withCredentials: true });
+        // The API returns { success: true, projects: [...] }
+        setRecentProjects(Array.isArray(projectsRes.data.projects) ? projectsRes.data.projects : []);
       } catch (err: any) {
         setError(err.message || "Unknown error");
       } finally {
@@ -103,31 +102,28 @@ export default function ProjectsPage() {
         ))}
       </div>
       <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
-        <h3 className="text-lg font-medium mb-4">Recent Projects</h3>
+        <h3 className="text-lg font-medium mb-4">Projects</h3>
         {recentProjects.length === 0 ? (
           <p className="text-muted-foreground">No recent projects found.</p>
         ) : (
-          <ul className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {recentProjects.map((project) => (
-              <li key={project.id}>
-                <Link href={`/projects/${project.id}`} className="block">
-                  <Card className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <span className="font-semibold">{project.name}</span>
-                        {project.client && (
-                          <span className="ml-2 text-muted-foreground">({project.client.name})</span>
-                        )}
+              <Link key={project.id} href={`/projects/${project.id}`} className="block mb-2">
+                <Card className="p-4 flex flex-col flex-1/3">
+                  <CardTitle className="flex text-lg text-primary-foreground items-center justify-center font-semibold">{project.name}</CardTitle>
+                  <CardDescription className="text-sm text-accent line-clamp-3">{project.description}</CardDescription>
+                  {/* shows only three tasks with todo like this */}
+                  <div className="mt-2">
+                    {project.tasks.slice(0, 3).map((task, index) => (
+                      <div key={index} className="flex items-center">
+                        <span className="text-sm text-muted-foreground">{project.tasks[index]}</span>
                       </div>
-                      <span className="mt-2 md:mt-0 text-xs text-muted-foreground">
-                        {new Date(project.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </Card>
-                </Link>
-              </li>
+                    ))}
+                  </div>
+                </Card>
+              </Link>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

@@ -41,25 +41,6 @@ import {
 } from "@/components/ui/sidebar"
 
 /**
- * Navigation Item Interface
- */
-interface NavItem {
-  title: string;
-  url: string;
-  icon?: React.ComponentType;
-  isActive?: boolean;
-  items?: NavSubItem[];
-}
-
-/**
- * Navigation Sub-Item Interface
- */
-interface NavSubItem {
-  title: string;
-  url: string;
-}
-
-/**
  * App Sidebar Props Interface
  * 
  * @property {string} userRole - User role determines which navigation items are visible
@@ -363,3 +344,4 @@ export function AppSidebar({ userRole, ...props }: AppSidebarProps) {
     </Sidebar>
   );
 }
+           

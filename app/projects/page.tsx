@@ -44,6 +44,7 @@ export default function ProjectsPage() {
 
         // Fetch projects using axios
         const projectsRes = await axios.get("/api/getProjects", { withCredentials: true });
+        
         // The API returns { success: true, projects: [...] }
         setRecentProjects(Array.isArray(projectsRes.data.projects) ? projectsRes.data.projects : []);
       } catch (err: any) {
@@ -116,7 +117,7 @@ export default function ProjectsPage() {
                   <div className="mt-2">
                     {project.tasks.slice(0, 3).map((task, index) => (
                       <div key={index} className="flex items-center">
-                        <span className="text-sm text-muted-foreground">{project.tasks[index]}</span>
+                        <span className="text-sm text-muted-foreground">{}</span>
                       </div>
                     ))}
                   </div>

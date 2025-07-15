@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 interface ProjectStats {
   [key: string]: number;
@@ -42,10 +43,7 @@ export default function ProjectsPage() {
         const statsJson = await statsRes.json();
         setStatsData(statsJson.stats || {});
 
-        // Fetch projects using axios
         const projectsRes = await axios.get("/api/getProjects", { withCredentials: true });
-        
-        // The API returns { success: true, projects: [...] }
         setRecentProjects(Array.isArray(projectsRes.data.projects) ? projectsRes.data.projects : []);
       } catch (err: any) {
         setError(err.message || "Unknown error");
@@ -75,6 +73,36 @@ export default function ProjectsPage() {
     hoursLogged: (val) => `${val}h`
   };
 
+  const getTaskStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-500/20 text-green-700 border-green-500/30';
+      case 'in-progress':
+      case 'in_progress':
+        return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+      case 'pending':
+      case 'todo':
+        return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const getTaskCounts = (tasks: { status: string }[]) => {
+    const counts = tasks.reduce((acc, task) => {
+      const status = task.status.toLowerCase();
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return {
+      completed: counts.completed || 0,
+      inProgress: counts['in-progress'] || counts['in_progress'] || 0,
+      pending: counts.pending || counts.todo || 0,
+      total: tasks.length
+    };
+  };
+
   if (loading) {
     return <div className="p-4">Loading...</div>;
   }
@@ -88,6 +116,7 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
       </div>
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Object.keys(statsData).map((key) => (
           <div key={key} className="bg-card text-card-foreground rounded-lg border p-6">
@@ -102,31 +131,63 @@ export default function ProjectsPage() {
           </div>
         ))}
       </div>
+      {/* Projects Grid */}
       <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
         <h3 className="text-lg font-medium mb-4">Projects</h3>
         {recentProjects.length === 0 ? (
           <p className="text-muted-foreground">No recent projects found.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {recentProjects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`} className="block mb-2">
-                <Card className="p-4 flex flex-col flex-1/3">
-                  <CardTitle className="flex text-lg text-primary-foreground items-center justify-center font-semibold">{project.name}</CardTitle>
-                  <CardDescription className="text-sm text-accent line-clamp-3">{project.description}</CardDescription>
-                  {/* shows only three tasks with todo like this */}
-                  <div className="mt-2">
-                    {project.tasks.slice(0, 3).map((task, index) => (
-                      <div key={index} className="flex items-center">
-                        <span className="text-sm text-muted-foreground">{}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {recentProjects.map((project) => {
+              const taskCounts = getTaskCounts(project.tasks);
+              return (
+                <Link key={project.id} href={`/projects/${project.id}`} className="block h-full">
+                  <Card className="flex flex-col h-full min-h-[260px] hover:shadow-md transition-shadow duration-200 group">
+                    <CardHeader className="pb-3 flex-shrink-0">
+                      <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                        {project.name}
+                      </CardTitle>
+                      {project.client && (
+                        <div className="text-xs text-muted-foreground">
+                          {project.client.name}
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="flex flex-col flex-1 justify-between pt-0">
+                      <div className="space-y-3 flex-1">
+                        <CardDescription className="text-sm line-clamp-3">
+                          {project.description || "No description available"}
+                        </CardDescription>
+                        {/* Task Summary */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Tasks</span>
+                            <span>{taskCounts.total}</span>
+                          </div>
+                          {taskCounts.total > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {taskCounts.completed > 0 && (
+                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('completed')}`}>{taskCounts.completed} Done</Badge>
+                              )}
+                              {taskCounts.inProgress > 0 && (
+                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('in-progress')}`}>{taskCounts.inProgress} Active</Badge>
+                              )}
+                              {taskCounts.pending > 0 && (
+                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('pending')}`}>{taskCounts.pending} Pending</Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
   );
 }
+

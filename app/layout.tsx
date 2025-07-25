@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { SessionWrapper } from "@/components/session-wrapper";
-
+import Providers from "./providers/Providers";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -22,10 +22,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({
-  children,
-}: Readonly<{
+  children,}: Readonly<{
   children: React.ReactNode;
-}>) {
+}>
+
+) {
   const session = await getServerSession(authOptions);
   
   return (
@@ -33,6 +34,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Providers>
         <SessionWrapper session={session}>
           {session ? (
             <SidebarLayout>{children}</SidebarLayout>
@@ -40,6 +42,7 @@ export default async function RootLayout({
             children
           )}
         </SessionWrapper>
+        </Providers>
       </body>
     </html>
   );

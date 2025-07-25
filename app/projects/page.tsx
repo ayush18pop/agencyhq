@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import axios from "axios";
-
+import { useProjects } from '@/hooks/useProjects';
+import { useProjectsStats } from "@/hooks/useProjectsStats";
 interface ProjectStats {
   [key: string]: number;
 }
@@ -26,34 +26,9 @@ export interface RecentProject {
 }
 
 export default function ProjectsPage() {
-  const [statsData, setStatsData] = useState<ProjectStats>({});
-  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const statsRes = await fetch("/api/dashboard/stats", { credentials: "include" });
-        if (!statsRes.ok) {
-          throw new Error("Failed to fetch project stats");
-        }
-        const statsJson = await statsRes.json();
-        setStatsData(statsJson.stats || {});
-
-        const projectsRes = await axios.get("/api/getProjects", { withCredentials: true });
-        setRecentProjects(Array.isArray(projectsRes.data.projects) ? projectsRes.data.projects : []);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { data: recentProjects = [], isLoading, error } = useProjects(undefined);
+  const { data: statsRes, isLoading: statsLoading, error: statsError } = useProjectsStats();
+  const statsData: ProjectStats = statsRes?.data?.stats || {};
 
   const statLabels: { [key: string]: string } = {
     projects: "Total Projects",
@@ -103,12 +78,16 @@ export default function ProjectsPage() {
     };
   };
 
-  if (loading) {
-    return <div className="p-4">Loading...</div>;
+  if(isLoading || statsLoading){
+    
+    return <>
+    Loading...
+    </>
   }
 
-  if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+
+  if (error || statsError) {
+    return <div className="text-red-500 p-4">{(error as Error)?.message || (statsError as Error)?.message || 'Failed to load data'}</div>;
   }
 
   return (
@@ -134,7 +113,8 @@ export default function ProjectsPage() {
       {/* Projects Grid */}
       <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
         <h3 className="text-lg font-medium mb-4">Projects</h3>
-        {recentProjects.length === 0 ? (
+      {
+        recentProjects.length === 0 ? (
           <p className="text-muted-foreground">No recent projects found.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -185,7 +165,8 @@ export default function ProjectsPage() {
               );
             })}
           </div>
-        )}
+        )
+      }
       </div>
     </div>
   );

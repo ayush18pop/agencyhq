@@ -119,16 +119,16 @@ export default function ProjectsPage() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Object.keys(statsData).map((key) => (
-          <div key={key} className="bg-card text-card-foreground rounded-lg border p-6">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card key={key} className="bg-card text-card-foreground rounded-lg border p-6">
+            <CardTitle className="flex flex-row items-center justify-between space-y-0 pb-2">
               <h3 className="text-sm font-medium">{statLabels[key] || key}</h3>
-            </div>
+            </CardTitle>
             <div className="text-2xl font-bold">
               {typeof statsData[key] === "number"
                 ? (statFormat[key] ? statFormat[key](statsData[key]) : statsData[key])
                 : "N/A"}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
       {/* Projects Grid */}

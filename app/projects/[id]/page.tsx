@@ -97,7 +97,30 @@ export default function ProjectsPage() {
 
   // Use the loading and error states from useQuery
   if (isLoading) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="container mx-auto p-4">
+  <div className="mb-4 animate-pulse">
+    {/* Skeleton for the Title */}
+    <div className="h-14 w-3/4 mb-4 rounded-md bg-muted" />
+    {/* Skeleton for the Description */}
+    <div className="h-6 w-1/2 rounded-md bg-muted" />
+  </div>
+
+  {/* Skeletons for the Task Cards */}
+  <div className="space-y-4">
+    {/* We can create an array and map over it to render multiple skeletons */}
+    {Array.from({ length: 3 }).map((_, index) => (
+      <div className="p-4 border rounded-lg" key={index}>
+        <div className="animate-pulse space-y-3">
+          <div className="h-5 w-2/5 rounded-md bg-muted" />
+          <div className="flex justify-between">
+            <div className="h-4 w-1/4 rounded-md bg-muted" />
+            <div className="h-4 w-1/6 rounded-md bg-muted" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
   }
 
   if (isError) {

@@ -6,7 +6,7 @@ import Link from "next/link";
 // HIGHLIGHT: Removed useState, useEffect, and useProjectStore as they are no longer needed
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectsStats } from "@/hooks/useProjectsStats";
-
+import { Skeleton } from "@/components/ui/skeleton";
 // Interfaces can remain the same
 interface ProjectStats {
   [key: string]: number;
@@ -89,7 +89,40 @@ export default function ProjectsPage() {
 
   // Loading and Error states remain the same
   if(isLoading || statsLoading) {
-    return <>Loading...</>;
+    return <div className="flex-1 space-y-4 p-4 pt-6 animate-pulse">
+            {/* Header Skeleton */}
+            <div className="h-8 w-48 rounded-md bg-secondary" />
+
+            {/* Stats Cards Skeleton */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="bg-card rounded-lg border border-border p-6 space-y-2">
+                  <div className="h-4 w-1/2 rounded-md bg-secondary" />
+                  <div className="h-8 w-1/4 rounded-md bg-secondary" />
+                </div>
+              ))}
+            </div>
+
+            {/* Projects Grid Skeleton */}
+            <div className="bg-card/50 min-h-[400px] flex-1 rounded-xl p-4">
+              <div className="h-6 w-40 mb-4 rounded-md bg-secondary" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="flex flex-col h-full min-h-[260px] rounded-lg border border-border bg-card p-4 space-y-4">
+                    <div className="space-y-2">
+                      <div className="h-5 w-3/4 rounded-md bg-secondary" />
+                      <div className="h-4 w-1/2 rounded-md bg-secondary" />
+                    </div>
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 w-full rounded-md bg-secondary" />
+                      <div className="h-4 w-5/6 rounded-md bg-secondary" />
+                    </div>
+                    <div className="h-4 w-1/3 rounded-md bg-secondary" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
   }
 
   if (error || statsError) {
@@ -118,8 +151,8 @@ export default function ProjectsPage() {
         ))}
       </div>
       {/* Projects Grid */}
-      <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
-        <h3 className="text-lg font-medium mb-4">Projects</h3>
+      <div className=" min-h-[400px] flex-1 rounded-xl m-0">
+        <div className="mb-4"><div className="w-full"><div className="h-px bg-border" /></div></div>
         {
           projects.length === 0 ? (
             <p className="text-muted-foreground">No recent projects found.</p>

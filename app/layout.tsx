@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { SessionWrapper } from "@/components/session-wrapper";
-import Providers from "./providers/Providers";
+import Providers from "./providers/providers";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

@@ -6,7 +6,6 @@ import Link from "next/link";
 // HIGHLIGHT: Removed useState, useEffect, and useProjectStore as they are no longer needed
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectsStats } from "@/hooks/useProjectsStats";
-import { Skeleton } from "@/components/ui/skeleton";
 // Interfaces can remain the same
 interface ProjectStats {
   [key: string]: number;
@@ -158,7 +157,7 @@ export default function ProjectsPage() {
             <p className="text-muted-foreground">No recent projects found.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {projects.map((project) => {
+              {projects.map((project: RecentProject) => {
                 const taskCounts = getTaskCounts(project.tasks);
                 return (
                   <Link key={project.id} href={`/projects/${project.id}`} className="block h-full">

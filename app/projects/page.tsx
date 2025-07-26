@@ -3,10 +3,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+// HIGHLIGHT: Removed useState, useEffect, and useProjectStore as they are no longer needed
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectsStats } from "@/hooks/useProjectsStats";
-import { useProjectStore } from "@/store/projectStore";
+
+// Interfaces can remain the same
 interface ProjectStats {
   [key: string]: number;
 }
@@ -27,17 +28,17 @@ export interface RecentProject {
 }
 
 export default function ProjectsPage() {
-  const { data: recentProjects = [], isLoading, error } = useProjects(undefined);
+  // HIGHLIGHT: Get projects DIRECTLY from TanStack Query and rename `data` to `projects`.
+  // The `[]` default value prevents errors if data is transiently undefined.
+  const { data: projects = [], isLoading, error } = useProjects(undefined);
   const { data: statsRes, isLoading: statsLoading, error: statsError } = useProjectsStats();
-  const statsData: ProjectStats = statsRes?.data?.stats || {};
-  const setProjects = useProjectStore((s) => s.setProjects);
 
-  useEffect(() => {
-    if (recentProjects.length > 0) {
-      setProjects(recentProjects);
-    }
-  }, [recentProjects, setProjects]);
-  const projects = useProjectStore((s) => s.projects);
+  const statsData: ProjectStats = statsRes?.data?.stats || {};
+
+  // HIGHLIGHT: The useEffect and Zustand logic has been completely removed.
+  // TanStack Query now manages this state automatically.
+
+  // Helper functions can remain the same
   const statLabels: { [key: string]: string } = {
     projects: "Total Projects",
     tasks: "Active Tasks",
@@ -86,18 +87,16 @@ export default function ProjectsPage() {
     };
   };
 
-  if(isLoading || statsLoading){
-    
-    return <>
-    Loading...
-    </>
+  // Loading and Error states remain the same
+  if(isLoading || statsLoading) {
+    return <>Loading...</>;
   }
-
 
   if (error || statsError) {
     return <div className="text-red-500 p-4">{(error as Error)?.message || (statsError as Error)?.message || 'Failed to load data'}</div>;
   }
 
+  // The JSX part requires no changes because it already uses the `projects` variable.
   return (
     <div className="flex-1 space-y-4 p-4 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -121,62 +120,61 @@ export default function ProjectsPage() {
       {/* Projects Grid */}
       <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
         <h3 className="text-lg font-medium mb-4">Projects</h3>
-      {
-        projects.length === 0 ? (
-          <p className="text-muted-foreground">No recent projects found.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {projects.map((project) => {
-              const taskCounts = getTaskCounts(project.tasks);
-              return (
-                <Link key={project.id} href={`/projects/${project.id}`} className="block h-full">
-                  <Card className="flex flex-col h-full min-h-[260px] hover:shadow-md transition-shadow duration-200 group">
-                    <CardHeader className="pb-3 flex-shrink-0">
-                      <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                        {project.name}
-                      </CardTitle>
-                      {project.client && (
-                        <div className="text-xs text-muted-foreground">
-                          {project.client.name}
-                        </div>
-                      )}
-                    </CardHeader>
-                    <CardContent className="flex flex-col flex-1 justify-between pt-0">
-                      <div className="space-y-3 flex-1">
-                        <CardDescription className="text-sm line-clamp-3">
-                          {project.description || "No description available"}
-                        </CardDescription>
-                        {/* Task Summary */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Tasks</span>
-                            <span>{taskCounts.total}</span>
+        {
+          projects.length === 0 ? (
+            <p className="text-muted-foreground">No recent projects found.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {projects.map((project) => {
+                const taskCounts = getTaskCounts(project.tasks);
+                return (
+                  <Link key={project.id} href={`/projects/${project.id}`} className="block h-full">
+                    <Card className="flex flex-col h-full min-h-[260px] hover:shadow-md transition-shadow duration-200 group">
+                      <CardHeader className="pb-3 flex-shrink-0">
+                        <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                          {project.name}
+                        </CardTitle>
+                        {project.client && (
+                          <div className="text-xs text-muted-foreground">
+                            {project.client.name}
                           </div>
-                          {taskCounts.total > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {taskCounts.completed > 0 && (
-                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('completed')}`}>{taskCounts.completed} Done</Badge>
-                              )}
-                              {taskCounts.inProgress > 0 && (
-                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('in-progress')}`}>{taskCounts.inProgress} Active</Badge>
-                              )}
-                              {taskCounts.pending > 0 && (
-                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('pending')}`}>{taskCounts.pending} Pending</Badge>
-                              )}
+                        )}
+                      </CardHeader>
+                      <CardContent className="flex flex-col flex-1 justify-between pt-0">
+                        <div className="space-y-3 flex-1">
+                          <CardDescription className="text-sm line-clamp-3">
+                            {project.description || "No description available"}
+                          </CardDescription>
+                          {/* Task Summary */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Tasks</span>
+                              <span>{taskCounts.total}</span>
                             </div>
-                          )}
+                            {taskCounts.total > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {taskCounts.completed > 0 && (
+                                  <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('completed')}`}>{taskCounts.completed} Done</Badge>
+                                )}
+                                {taskCounts.inProgress > 0 && (
+                                  <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('in-progress')}`}>{taskCounts.inProgress} Active</Badge>
+                                )}
+                                {taskCounts.pending > 0 && (
+                                  <Badge variant="secondary" className={`text-xs px-2 py-1 ${getTaskStatusColor('pending')}`}>{taskCounts.pending} Pending</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        )
-      }
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )
+        }
       </div>
     </div>
   );
 }
-

@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/input";
 import axios from "axios";
-import { useProjectStore } from "@/store/projectStore";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 export interface ProjectWithStats {
   id: string;
   name: string;
@@ -17,95 +16,103 @@ export interface ProjectWithStats {
   createdAt: string;
   updatedAt: string;
   teamId?: string | null;
-  tasks: { title: string; status: string; priority: string; dueDate: Date; assignedTo: { id: string; name: string; email: string; role: string} }[];
+  tasks: { title: string; status: string; priority: string; dueDate: Date; assignedTo: { id:string; name: string; email: string; role: string} }[];
   totalTasks: number;
   completedTasks: number;
   pendingTasks: number;
   inProgressTasks: number;
 }
 
+// The function to fetch a single project
+const fetchProjectById = async (projectId: string) => {
+  const res = await fetch(`/api/getProject?projectId=${projectId}`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch project details');
+  }
+  const data = await res.json();
+  return data.project as ProjectWithStats;
+};
+
+
 export default function ProjectsPage() {
   const params = useParams();
-  const projectId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
+  const projectId = typeof params.id === "string" ? params.id : undefined;
 
-  const [project, setProject] = useState<ProjectWithStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggleTitleChange, setToggleTitleChange]  = useState(false);
+  // HIGHLIGHT: Get the Query Client instance to manually update the cache
+  const queryClient = useQueryClient();
+
+  // HIGHLIGHT: Use TanStack Query to fetch the project data
+  // This replaces the manual useEffect, loading, and error states
+  const { data: project, isLoading, isError, error } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => fetchProjectById(projectId!),
+    enabled: !!projectId, // Only run the query if projectId is valid
+  });
+
+  // State for managing the inline title editor
+  const [toggleTitleChange, setToggleTitleChange] = useState(false);
+  const [titleInput, setTitleInput] = useState<string>("");
+
+  // HIGHLIGHT: Use useEffect to sync the input field when the project data loads or changes
   useEffect(() => {
-    if (!projectId) {
-      setError("Invalid project ID");
-      setLoading(false);
-      return;
+    if (project) {
+      setTitleInput(project.name);
     }
+  }, [project]);
 
-    // Try to get project from store first
-    const storeProject = useProjectStore.getState().getProjectById(projectId);
-    if (storeProject) {
-      setProject(storeProject);
-      setLoading(false);
-      return;
-    }
-
-    const fetchProject = async () => {
-      try {
-        const res = await fetch(`/api/getProject?projectId=${projectId}`, {
-          credentials: "include",
-        });
-        if (!res.ok) {
-          const errorText = await res.text();
-          setError("Failed to fetch project details: " + errorText);
-          setLoading(false);
-          return;
-        }
-        const { project } = await res.json();
-        setProject(project);
-        // Update store with fetched project
-        useProjectStore.getState().updateProject(project);
-      } catch {
-        setError("Failed to fetch project details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProject();
-  }, [projectId]);
-  const [titleInput, setTitleInput] = useState<string>(project?.name ?? "");
-  const updateProject = useProjectStore((s) => s.updateProject);
   const handleTitleSave = async () => {
-    if (!project) return;
-    if (titleInput.trim() === "" || titleInput === project.name) {
+    if (!project || !projectId || titleInput.trim() === "" || titleInput === project.name) {
       setToggleTitleChange(false);
       return;
     }
     try {
+      // 1. Update the database (this is correct)
       await axios.put("/api/editProject", { id: project.id, name: titleInput });
-      const updatedProject = { ...project, name: titleInput };
-      setProject(updatedProject); // local state
-      updateProject(updatedProject); // update Zustand store
+
+      // 2. INSTANTLY UPDATE THE MAIN PROJECTS LIST CACHE
+      // This makes the change appear immediately on the /projects page without a refetch.
+      // The queryKey ['projects', undefined] must match the key used on that page.
+      queryClient.setQueryData(['projects', undefined], (oldData: ProjectWithStats[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.map((p) =>
+          p.id === project.id ? { ...p, name: titleInput } : p
+        );
+      });
+
+      // 3. INSTANTLY UPDATE THE CACHE FOR *THIS* PROJECT
+      // This updates the UI on the current page immediately.
+      queryClient.setQueryData(['project', projectId], (oldData: ProjectWithStats | undefined) => {
+        if (!oldData) return undefined;
+        return { ...oldData, name: titleInput };
+      });
+
       setToggleTitleChange(false);
     } catch (e) {
-      console.log("error", e);
+      console.log("error saving title", e);
+      // Optional: Add user feedback for the error
     }
   };
-  
 
-  if (loading) {
+  // Use the loading and error states from useQuery
+  if (isLoading) {
     return <div className="p-4">Loading...</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+  if (isError) {
+    return <div className="text-red-500 p-4">{error?.message || "An error occurred"}</div>;
   }
 
   if (!project) {
     return <div className="text-red-500 p-4">Project not found</div>;
   }
+
+  // The JSX remains largely the same
   return (
     <div className="container mx-auto p-4">
       <div className="mb-4">
-      <h1 className="text-5xl font-bold mb-4" onClick={() => { setTitleInput(project?.name ?? ""); setToggleTitleChange(!toggleTitleChange); }}>
+      <h1 className="text-5xl font-bold mb-4" onClick={() => { setTitleInput(project.name); setToggleTitleChange(!toggleTitleChange); }}>
         {!toggleTitleChange ? (
           <>{project.name}</>
         ) : (
@@ -115,21 +122,24 @@ export default function ProjectsPage() {
             onBlur={handleTitleSave}
             onKeyDown={e => {
               if(e.key === "Enter") handleTitleSave();
-              if(e.key === "Escape") setToggleTitleChange(false);
+              if(e.key === "Escape") {
+                setTitleInput(project.name); // Reset on escape
+                setToggleTitleChange(false);
+              }
             }}
             autoFocus
             className="text-5xl font-bold w-full bg-transparent border-none text-inherit p-0 m-0 focus:outline-none"
           />
         )}
         </h1>
-       <div className="text-muted-foreground">Description: {project.description || "No description"}</div>
-       </div>
-       {project.tasks.map((task, index) => (
+        <div className="text-muted-foreground">Description: {project.description || "No description"}</div>
+        </div>
+        {project.tasks.map((task, index) => (
           <Card className="mb-4 p-4" key={index}>
-            
+            {/* ...task details... */}
+            <p>{task.title}</p>
           </Card>
-      ))}
-      
+        ))}
     </div>
   );
 }

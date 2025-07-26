@@ -2,21 +2,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
+    const { searchParams } = new URL(req.url);
+    const paramTaskId = searchParams.get("taskId");    if (!session?.user?.id) {
         return new Response("Unauthorized", { status: 401 });
     }
 
     try {
         // If manager/admin, get all timers. If professional/client, get only their timers
         const whereClause = ['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '') 
-            ? {} 
+            ? {
+                taskId: paramTaskId
+            } 
             : {
                 task: {
                     userId: session.user.id
-                }
+                },
+                taskId: paramTaskId
             };
 
         const timers = await prisma.timer.findMany({
@@ -41,9 +44,8 @@ export async function GET() {
         });
 
         return new Response(JSON.stringify({
-            success: true,
             timers
-        }), { status: 200 });
+        }), { status: 200, headers: { "Content-Type": "application/json" } });
     } catch {
         return new Response("Error fetching timers", { status: 500 });
     }
@@ -86,7 +88,7 @@ export async function POST(request: Request) {
         return new Response(JSON.stringify({
             success: true,
             timer
-        }), { status: 201 });
+        }), { status: 201, headers: { "Content-Type": "application/json" } });
 
     } catch (error) {
         console.error("Error starting timer:", error);

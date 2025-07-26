@@ -92,8 +92,12 @@ function useTaskTimer(taskId: string) {
       setActiveTimerId(response.data.timer.id);
       setIsRunning(true);
       toast.success("Timer started!");
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to start timer.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.error || "Failed to start timer.");
+      } else {
+        toast.error("Failed to start timer.");
+      }
     }
   };
 
@@ -108,7 +112,7 @@ function useTaskTimer(taskId: string) {
       // After stopping, refetch both the task details and the stats to update the UI.
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       queryClient.invalidateQueries({ queryKey: ['task_stats', taskId] });
-    } catch (error) {
+    } catch {
       toast.error("Failed to stop timer.");
     }
   };

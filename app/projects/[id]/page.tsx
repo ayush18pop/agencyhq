@@ -198,38 +198,43 @@ const userId = session?.user?.id; // Or however you get it
         <CardContent>
           <div className="space-y-4">
             {project.tasks.length > 0 ? project.tasks.map((task) => (
-              <div
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                style={task.assignedTo.id === userId ? { borderColor: "var(--primary)" } : {}}
+              <a
+                href={`/projects/${projectId}/${task.taskId}`}
+                className="block"
                 key={task.taskId}
               >
-                <div className="flex-1">
-                  <p className="font-semibold text-card-foreground">{task.title}</p>
-                  <div className="text-sm text-muted-foreground flex items-center space-x-4 mt-1">
-                    <span>Assigned to: {task.assignedTo.name}</span>
-                    {task.dueDate && (
-                      <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </div>
-                <Select
-                  value={task.status}
-                  onValueChange={(newStatus: Status) => handleStatusChange(task.taskId, newStatus)}
+                <div
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  style={task.assignedTo.id === userId ? { borderColor: "var(--primary)" } : {}}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {statuses.map(status => (
-                        <SelectItem key={status} value={status}>
-                          {formatStatusText(status)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-card-foreground">{task.title}</p>
+                    <div className="text-sm text-muted-foreground flex items-center space-x-4 mt-1">
+                      <span>Assigned to: {task.assignedTo.name}</span>
+                      {task.dueDate && (
+                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Select
+                    value={task.status}
+                    onValueChange={(newStatus: Status) => handleStatusChange(task.taskId, newStatus)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {statuses.map(status => (
+                          <SelectItem key={status} value={status}>
+                            {formatStatusText(status)}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </a>
             )) : (
               <p className="text-muted-foreground text-center p-4">No tasks found for this project.</p>
             )}

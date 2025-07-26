@@ -27,6 +27,7 @@ model User {
   createdTasks       Tasks[]             @relation("TaskCreator")
   assignedTasks      Tasks[]             @relation("TaskAssignee")
   userTeams          UserTeam[]
+  timeLogs           Timer[] // Add this back-relation
 }
 
 model Team {
@@ -69,7 +70,7 @@ model Tasks {
   assignedBy   User             @relation("TaskCreator", fields: [assignedById], references: [id])
   project      Project?         @relation(fields: [projectId], references: [id])
   assignedTo   User             @relation("TaskAssignee", fields: [userId], references: [id])
-  Timer        Timer[]
+  timeLogs     Timer[]
 }
 
 model Timer {
@@ -78,7 +79,9 @@ model Timer {
   endTime   DateTime?
   duration  Int?
   taskId    String
+  userId    String
   task      Tasks     @relation(fields: [taskId], references: [taskId])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Project {

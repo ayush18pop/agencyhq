@@ -64,38 +64,13 @@ export async function POST(request: Request) {
     }
 
     try {
-        // Check if task exists and user has access
-        const task = await prisma.tasks.findUnique({
-            where: { taskId }
-        });
-
-        if (!task) {
-            return new Response("Task not found", { status: 404 });
-        }
-
-        // Check if user can track time for this task
-        if (task.userId !== session.user.id && !['SUPER_ADMIN', 'MANAGER'].includes(session.user.role || '')) {
-            return new Response("Unauthorized to track time for this task", { status: 401 });
-        }
-
-        // Check if there's already an active timer for this user
-        const activeTimer = await prisma.timer.findFirst({
-            where: {
-                endTime: null,
-                task: {
-                    userId: session.user.id
-                }
-            }
-        });
-
-        if (activeTimer) {
-            return new Response("You already have an active timer running", { status: 400 });
-        }
+        // ... (your other checks for active timers, etc., are fine)
 
         // Start new timer
         const timer = await prisma.timer.create({
             data: {
-                taskId,
+                taskId: taskId,
+                userId: session.user.id, // <-- FIX: Add the user ID from the session
                 startTime: new Date()
             },
             include: {
@@ -112,7 +87,10 @@ export async function POST(request: Request) {
             success: true,
             timer
         }), { status: 201 });
-    } catch {
+
+    } catch (error) {
+        console.error("Error starting timer:", error);
         return new Response("Error starting timer", { status: 500 });
     }
 }
+

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
-
+import { useProjectStore } from "@/store/projectStore";
 export interface ProjectWithStats {
   id: string;
   name: string;
@@ -39,6 +39,14 @@ export default function ProjectsPage() {
       return;
     }
 
+    // Try to get project from store first
+    const storeProject = useProjectStore.getState().getProjectById(projectId);
+    if (storeProject) {
+      setProject(storeProject);
+      setLoading(false);
+      return;
+    }
+
     const fetchProject = async () => {
       try {
         const res = await fetch(`/api/getProject?projectId=${projectId}`, {
@@ -52,6 +60,8 @@ export default function ProjectsPage() {
         }
         const { project } = await res.json();
         setProject(project);
+        // Update store with fetched project
+        useProjectStore.getState().updateProject(project);
       } catch {
         setError("Failed to fetch project details");
       } finally {
@@ -61,14 +71,25 @@ export default function ProjectsPage() {
 
     fetchProject();
   }, [projectId]);
-
-//   const handleTitleSave = async () => {
-//   axios.put(`${process.env.NEXTAUTH_URL}/app/api/editProject`,{id: project.id, name: titleInput});
-//   // Call your API to update the title here
-//   // await axios.put("/api/editProject", { id: project.id, name: titleInput });
-//   setProject((p) => p ? { ...p, name: titleInput } : p);
-//   setToggleTitleChange(false);
-// };
+  const [titleInput, setTitleInput] = useState<string>(project?.name ?? "");
+  const updateProject = useProjectStore((s) => s.updateProject);
+  const handleTitleSave = async () => {
+    if (!project) return;
+    if (titleInput.trim() === "" || titleInput === project.name) {
+      setToggleTitleChange(false);
+      return;
+    }
+    try {
+      await axios.put("/api/editProject", { id: project.id, name: titleInput });
+      const updatedProject = { ...project, name: titleInput };
+      setProject(updatedProject); // local state
+      updateProject(updatedProject); // update Zustand store
+      setToggleTitleChange(false);
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+  
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -84,11 +105,21 @@ export default function ProjectsPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="mb-4">
-      <h1 className="text-5xl font-bold mb-4" onClick={()=> setToggleTitleChange(!toggleTitleChange)}>
+      <h1 className="text-5xl font-bold mb-4" onClick={() => { setTitleInput(project?.name ?? ""); setToggleTitleChange(!toggleTitleChange); }}>
         {!toggleTitleChange ? (
           <>{project.name}</>
         ) : (
-          <Input></Input>
+          <input
+            value={titleInput}
+            onChange={e => setTitleInput(e.target.value)}
+            onBlur={handleTitleSave}
+            onKeyDown={e => {
+              if(e.key === "Enter") handleTitleSave();
+              if(e.key === "Escape") setToggleTitleChange(false);
+            }}
+            autoFocus
+            className="text-5xl font-bold w-full bg-transparent border-none text-inherit p-0 m-0 focus:outline-none"
+          />
         )}
         </h1>
        <div className="text-muted-foreground">Description: {project.description || "No description"}</div>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectsStats } from "@/hooks/useProjectsStats";
+import { useProjectStore } from "@/store/projectStore";
 interface ProjectStats {
   [key: string]: number;
 }
@@ -29,7 +30,14 @@ export default function ProjectsPage() {
   const { data: recentProjects = [], isLoading, error } = useProjects(undefined);
   const { data: statsRes, isLoading: statsLoading, error: statsError } = useProjectsStats();
   const statsData: ProjectStats = statsRes?.data?.stats || {};
+  const setProjects = useProjectStore((s) => s.setProjects);
 
+  useEffect(() => {
+    if (recentProjects.length > 0) {
+      setProjects(recentProjects);
+    }
+  }, [recentProjects, setProjects]);
+  const projects = useProjectStore((s) => s.projects);
   const statLabels: { [key: string]: string } = {
     projects: "Total Projects",
     tasks: "Active Tasks",
@@ -114,11 +122,11 @@ export default function ProjectsPage() {
       <div className="bg-muted/50 min-h-[400px] flex-1 rounded-xl p-4">
         <h3 className="text-lg font-medium mb-4">Projects</h3>
       {
-        recentProjects.length === 0 ? (
+        projects.length === 0 ? (
           <p className="text-muted-foreground">No recent projects found.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {recentProjects.map((project) => {
+            {projects.map((project) => {
               const taskCounts = getTaskCounts(project.tasks);
               return (
                 <Link key={project.id} href={`/projects/${project.id}`} className="block h-full">
